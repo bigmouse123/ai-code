@@ -1,6 +1,6 @@
-package com.jiankun.kunaicodemother.common;
+package com.jiankun.aicode.common;
 
-import com.jiankun.kunaicodemother.exception.ErrorCode;
+import com.jiankun.aicode.exception.ErrorCode;
 import lombok.Data;
 
 import java.io.Serializable;

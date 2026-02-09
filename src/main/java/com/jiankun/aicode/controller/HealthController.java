@@ -1,7 +1,7 @@
-package com.jiankun.kunaicodemother.controller;
+package com.jiankun.aicode.controller;
 
-import com.jiankun.kunaicodemother.common.BaseResponse;
-import com.jiankun.kunaicodemother.common.ResultUtils;
+import com.jiankun.aicode.common.BaseResponse;
+import com.jiankun.aicode.common.ResultUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

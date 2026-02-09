@@ -1,4 +1,4 @@
-package com.jiankun.kunaicodemother.common;
+package com.jiankun.aicode.common;
 
 import lombok.Data;
 

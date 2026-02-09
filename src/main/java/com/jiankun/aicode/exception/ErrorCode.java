@@ -1,4 +1,4 @@
-package com.jiankun.kunaicodemother.exception;
+package com.jiankun.aicode.exception;
 
 import lombok.Getter;
 

@@ -1,7 +1,7 @@
-package com.jiankun.kunaicodemother.exception;
+package com.jiankun.aicode.exception;
 
-import com.jiankun.kunaicodemother.common.BaseResponse;
-import com.jiankun.kunaicodemother.common.ResultUtils;
+import com.jiankun.aicode.common.BaseResponse;
+import com.jiankun.aicode.common.ResultUtils;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
