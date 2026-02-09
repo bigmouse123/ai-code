@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.jiankun</groupId>
-    <artifactId>kun-ai-code-mother</artifactId>
+    <artifactId>ai-code</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>kun-ai-code-mother</name>
-    <description>kun-ai-code-mother</description>
+    <name>ai-code</name>
+    <description>ai-code</description>
     <url/>
     <licenses>
         <license/>
@@ -45,6 +45,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
@@ -54,6 +58,23 @@
             <artifactId>lombok</artifactId>
             <version>1.18.36</version>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.mybatis-flex</groupId>
+            <artifactId>mybatis-flex-spring-boot3-starter</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+        <!-- 代码生成模块 -->
+        <dependency>
+            <groupId>com.mybatis-flex</groupId>
+            <artifactId>mybatis-flex-codegen</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+        <!-- 数据库连接池 -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>4.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
