@@ -6,7 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import com.jiankun.aicode.exception.BusinessException;
 import com.jiankun.aicode.exception.ErrorCode;
 import com.jiankun.aicode.model.dto.user.UserQueryRequest;
-import com.jiankun.aicode.model.ebums.UserRoleEnum;
+import com.jiankun.aicode.model.enums.UserRoleEnum;
 import com.jiankun.aicode.model.vo.LoginUserVO;
 import com.jiankun.aicode.model.vo.UserVO;
 import com.mybatisflex.core.query.QueryWrapper;

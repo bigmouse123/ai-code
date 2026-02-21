@@ -3,7 +3,7 @@ package com.jiankun.aicode.aop;
 import com.jiankun.aicode.annotation.AuthCheck;
 import com.jiankun.aicode.exception.BusinessException;
 import com.jiankun.aicode.exception.ErrorCode;
-import com.jiankun.aicode.model.ebums.UserRoleEnum;
+import com.jiankun.aicode.model.enums.UserRoleEnum;
 import com.jiankun.aicode.model.entity.User;
 import com.jiankun.aicode.service.UserService;
 import jakarta.annotation.Resource;

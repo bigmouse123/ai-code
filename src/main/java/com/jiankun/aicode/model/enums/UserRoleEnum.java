@@ -1,4 +1,4 @@
-package com.jiankun.aicode.model.ebums;
+package com.jiankun.aicode.model.enums;
 
 import cn.hutool.core.util.ObjUtil;
 import lombok.Getter;
