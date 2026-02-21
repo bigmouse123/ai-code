@@ -1,6 +1,5 @@
-package com.jiankun.aicode.service;
+package com.jiankun.aicode.ai;
 
-import com.jiankun.aicode.ai.AiCodeGeneratorService;
 import com.jiankun.aicode.model.HtmlCodeResult;
 import com.jiankun.aicode.model.MultiFileCodeResult;
 import jakarta.annotation.Resource;
