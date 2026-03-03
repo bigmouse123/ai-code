@@ -2,6 +2,7 @@ package com.jiankun.aicode.core.saver;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jiankun.aicode.constant.AppConstant;
 import com.jiankun.aicode.exception.BusinessException;
 import com.jiankun.aicode.exception.ErrorCode;
 import com.jiankun.aicode.exception.ThrowUtils;
@@ -20,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 public abstract class CodeFileSaverTemplate<T> {
 
     // 文件保存根目录
-    protected static final String FILE_SAVE_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
+    protected static final String FILE_SAVE_ROOT_DIR = AppConstant.CODE_OUTPUT_ROOT_DIR;
 
     /**
      * 模板方法：保存代码的标准流程
