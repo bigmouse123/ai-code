@@ -40,20 +40,13 @@ const formState = reactive<API.UserLoginRequest>({
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
 
-/**
- * 提交表单
- * @param values
- */
-const handleSubmit = async (values: never) => {
+const handleSubmit = async (values: API.UserLoginRequest) => {
   const res = await userLogin(values)
-  // 登录成功，把登录态保存到全局状态中
   if (res.data.code === 0 && res.data.data) {
-    await loginUserStore.fetchLoginUser()
+    loginUserStore.setLoginUser(res.data.data)
     message.success('登录成功')
-    router.push({
-      path: '/',
-      replace: true,
-    })
+    const redirect = router.currentRoute.value.query.redirect as string
+    router.push(redirect || '/')
   } else {
     message.error('登录失败，' + res.data.message)
   }

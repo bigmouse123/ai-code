@@ -1,7 +1,6 @@
 <template>
   <a-layout-header class="header">
     <a-row :wrap="false">
-      <!-- 左侧：Logo和标题 -->
       <a-col flex="200px">
         <RouterLink to="/">
           <div class="header-left">
@@ -10,7 +9,6 @@
           </div>
         </RouterLink>
       </a-col>
-      <!-- 中间：导航菜单 -->
       <a-col flex="auto">
         <a-menu
           v-model:selectedKeys="selectedKeys"
@@ -19,7 +17,6 @@
           @click="handleMenuClick"
         />
       </a-col>
-      <!-- 右侧：用户操作区域 -->
       <a-col>
         <div class="user-login-status">
           <div v-if="loginUserStore.loginUser.id">
@@ -53,20 +50,16 @@ import { useRouter } from 'vue-router'
 import { type MenuProps, message } from 'ant-design-vue'
 import { LogoutOutlined } from '@ant-design/icons-vue'
 import { userLogout } from '@/api/userController.ts'
-// JS 中引入 Store
 import { useLoginUserStore } from '@/stores/loginUser.ts'
 
 const loginUserStore = useLoginUserStore()
 
 const router = useRouter()
-// 当前选中菜单
 const selectedKeys = ref<string[]>(['/'])
-// 监听路由变化，更新当前选中菜单
-router.afterEach((to, from, next) => {
+router.afterEach((to) => {
   selectedKeys.value = [to.path]
 })
 
-// 菜单配置项
 const originItems = [
   {
     key: '/',
@@ -79,13 +72,17 @@ const originItems = [
     title: '用户管理',
   },
   {
+    key: '/admin/appManage',
+    label: '应用管理',
+    title: '应用管理',
+  },
+  {
     key: 'others',
-    label: h('a', { href: 'https://github.com/bigmouse123/ai-code', target: '_blank' }, '编程导航'),
+    label: h('a', { href: 'https://github.com/bigmouse123/ai-code', target: '_blank' }, '仓库导航'),
     title: '仓库',
   },
 ]
 
-// 过滤菜单项
 const filterMenus = (menus = [] as MenuProps['items']) => {
   return menus?.filter((menu) => {
     const menuKey = menu?.key as string
@@ -99,10 +96,8 @@ const filterMenus = (menus = [] as MenuProps['items']) => {
   })
 }
 
-// 展示在菜单的路由数组
 const menuItems = computed<MenuProps['items']>(() => filterMenus(originItems))
 
-// 用户注销
 const doLogout = async () => {
   const res = await userLogout()
   if (res.data.code === 0) {
@@ -116,11 +111,9 @@ const doLogout = async () => {
   }
 }
 
-// 处理菜单点击
 const handleMenuClick: MenuProps['onClick'] = (e) => {
   const key = e.key as string
   selectedKeys.value = [key]
-  // 跳转到对应页面
   if (key.startsWith('/')) {
     router.push(key)
   }
