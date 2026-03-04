@@ -1,5 +1,5 @@
 <template>
-  <div id="userManageView">
+  <div id="userManagePage">
     <!-- 搜索表单 -->
     <a-form layout="inline" :model="searchParams" @finish="doSearch">
       <a-form-item label="账号">
@@ -124,6 +124,7 @@ const doTableChange = (page: { current: number; pageSize: number }) => {
   fetchData()
 }
 
+// 搜索数据
 const doSearch = () => {
   searchParams.pageNum = 1
   fetchData()
@@ -148,7 +149,10 @@ onMounted(() => {
 })
 </script>
 
-<style>
-#userManageView {
+<style scoped>
+#userManagePage {
+  padding: 24px;
+  background: white;
+  margin-top: 16px;
 }
 </style>

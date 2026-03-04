@@ -1,6 +1,7 @@
 <template>
   <a-layout-header class="header">
     <a-row :wrap="false">
+      <!-- 左侧：Logo和标题 -->
       <a-col flex="200px">
         <RouterLink to="/">
           <div class="header-left">
@@ -9,6 +10,7 @@
           </div>
         </RouterLink>
       </a-col>
+      <!-- 中间：导航菜单 -->
       <a-col flex="auto">
         <a-menu
           v-model:selectedKeys="selectedKeys"
@@ -17,6 +19,7 @@
           @click="handleMenuClick"
         />
       </a-col>
+      <!-- 右侧：用户操作区域 -->
       <a-col>
         <div class="user-login-status">
           <div v-if="loginUserStore.loginUser.id">
@@ -48,21 +51,24 @@
 import { computed, h, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { type MenuProps, message } from 'ant-design-vue'
-import { LogoutOutlined } from '@ant-design/icons-vue'
-import { userLogout } from '@/api/userController.ts'
 import { useLoginUserStore } from '@/stores/loginUser.ts'
+import { userLogout } from '@/api/userController.ts'
+import { LogoutOutlined, HomeOutlined } from '@ant-design/icons-vue'
 
 const loginUserStore = useLoginUserStore()
-
 const router = useRouter()
+// 当前选中菜单
 const selectedKeys = ref<string[]>(['/'])
-router.afterEach((to) => {
+// 监听路由变化，更新当前选中菜单
+router.afterEach((to, from, next) => {
   selectedKeys.value = [to.path]
 })
 
+// 菜单配置项
 const originItems = [
   {
     key: '/',
+    icon: () => h(HomeOutlined),
     label: '主页',
     title: '主页',
   },
@@ -78,11 +84,12 @@ const originItems = [
   },
   {
     key: 'others',
-    label: h('a', { href: 'https://github.com/bigmouse123/ai-code', target: '_blank' }, '仓库导航'),
+    label: h('a', { href: 'https://github.com/bigmouse123/ai-code', target: '_blank' }, '仓库'),
     title: '仓库',
   },
 ]
 
+// 过滤菜单项
 const filterMenus = (menus = [] as MenuProps['items']) => {
   return menus?.filter((menu) => {
     const menuKey = menu?.key as string
@@ -96,8 +103,20 @@ const filterMenus = (menus = [] as MenuProps['items']) => {
   })
 }
 
+// 展示在菜单的路由数组
 const menuItems = computed<MenuProps['items']>(() => filterMenus(originItems))
 
+// 处理菜单点击
+const handleMenuClick: MenuProps['onClick'] = (e) => {
+  const key = e.key as string
+  selectedKeys.value = [key]
+  // 跳转到对应页面
+  if (key.startsWith('/')) {
+    router.push(key)
+  }
+}
+
+// 退出登录
 const doLogout = async () => {
   const res = await userLogout()
   if (res.data.code === 0) {
@@ -108,14 +127,6 @@ const doLogout = async () => {
     await router.push('/user/login')
   } else {
     message.error('退出登录失败，' + res.data.message)
-  }
-}
-
-const handleMenuClick: MenuProps['onClick'] = (e) => {
-  const key = e.key as string
-  selectedKeys.value = [key]
-  if (key.startsWith('/')) {
-    router.push(key)
   }
 }
 </script>
