@@ -6,6 +6,8 @@ import com.mybatisflex.codegen.Generator;
 import com.mybatisflex.codegen.config.GlobalConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 /**
@@ -17,7 +19,7 @@ import java.util.Map;
 public class MyBatisCodeGenerator {
 
     // 需要生成的表名
-    private static final String[] TABLE_NAMES = {"app"};
+    private static final String[] TABLE_NAMES = {"chat_history"};
 
     public static void main(String[] args) {
         // 获取数据源信息
@@ -73,9 +75,11 @@ public class MyBatisCodeGenerator {
         globalConfig.enableController();
 
         // 设置生成时间和字符串为空，避免多余的代码改动
+        // 1. 定义日期格式
+        String currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/M/d"));
         globalConfig.getJavadocConfig()
                 .setAuthor("lijiankun")
-                .setSince("");
+                .setSince(currentDate);
         return globalConfig;
     }
 }
