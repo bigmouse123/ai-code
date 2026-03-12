@@ -7,6 +7,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jiankun.aicode.constant.AppConstant;
 import com.jiankun.aicode.core.AiCodeGeneratorFacade;
+import com.jiankun.aicode.core.handler.StreamHandlerExecutor;
 import com.jiankun.aicode.exception.BusinessException;
 import com.jiankun.aicode.exception.ErrorCode;
 import com.jiankun.aicode.exception.ThrowUtils;
@@ -52,6 +53,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     private AiCodeGeneratorFacade aiCodeGeneratorFacade;
     @Resource
     private ChatHistoryService chatHistoryService;
+    @Resource
+    private StreamHandlerExecutor streamHandlerExecutor;
 
     /**
      * 通过对话生成AI应用代码
@@ -82,27 +85,10 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         // 5. 通过校验后，添加用户消息到对话历史
         chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(), loginUser.getId());
         // 6. 调用 AI 生成代码（流式）
-        Flux<String> contentFlux = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
+        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
         // 7. 收集AI响应内容并在完成后记录到对话历史
-        StringBuilder aiResponseBuilder = new StringBuilder();
-        return contentFlux
-                .map(chunk -> {
-                    // 收集AI响应内容
-                    aiResponseBuilder.append(chunk);
-                    return chunk;
-                })
-                .doOnComplete(() -> {
-                    // 流式响应完成后，添加AI消息到对话历史
-                    String aiResponse = aiResponseBuilder.toString();
-                    if (StrUtil.isNotBlank(aiResponse)) {
-                        chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
-                    }
-                })
-                .doOnError(error -> {
-                    // 如果AI回复失败，也要记录错误消息
-                    String errorMessage = "AI回复失败: " + error.getMessage();
-                    chatHistoryService.addChatMessage(appId, errorMessage, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
-                });
+        return streamHandlerExecutor.doExecute(codeStream, chatHistoryService, appId, loginUser, codeGenTypeEnum);
+
     }
 
     /**
