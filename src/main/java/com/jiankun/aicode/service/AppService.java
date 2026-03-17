@@ -1,5 +1,6 @@
 package com.jiankun.aicode.service;
 
+import com.jiankun.aicode.model.dto.app.AppAddRequest;
 import com.jiankun.aicode.model.dto.app.AppQueryRequest;
 import com.jiankun.aicode.model.entity.User;
 import com.jiankun.aicode.model.vo.AppVO;
@@ -27,6 +28,15 @@ public interface AppService extends IService<App> {
      * @return 流式响应
      */
     Flux<String> chatToGenCode(Long appId, String message, User loginUser);
+
+    /**
+     * 应用创建
+     *
+     * @param appAddRequest 应用创建请求
+     * @param loginUser     登录用户
+     * @return 应用ID
+     */
+    Long createApp(AppAddRequest appAddRequest, User loginUser);
 
     /**
      * 应用部署
