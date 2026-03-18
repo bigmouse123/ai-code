@@ -2,7 +2,6 @@ package com.jiankun.aicode.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jiankun.aicode.constant.AppConstant;
 import com.jiankun.aicode.constant.UserConstant;
 import com.jiankun.aicode.exception.ErrorCode;
 import com.jiankun.aicode.exception.ThrowUtils;
@@ -90,8 +89,7 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
         ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
         boolean isAdmin = UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole());
         boolean isCreator = app.getUserId().equals(loginUser.getId());
-        boolean isGood = app.getPriority().equals(AppConstant.GOOD_APP_PRIORITY);
-        ThrowUtils.throwIf(!isAdmin && !isCreator && !isGood, ErrorCode.NO_AUTH_ERROR, "无权查看该应用的对话历史");
+        ThrowUtils.throwIf(!isAdmin && !isCreator, ErrorCode.NO_AUTH_ERROR, "无权查看该应用的对话历史");
         // 构建查询条件
         ChatHistoryQueryRequest queryRequest = new ChatHistoryQueryRequest();
         queryRequest.setAppId(appId);
