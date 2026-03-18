@@ -6,7 +6,6 @@ import com.jiankun.aicode.ai.tools.FileWriteTool;
 import com.jiankun.aicode.exception.BusinessException;
 import com.jiankun.aicode.exception.ErrorCode;
 import com.jiankun.aicode.model.enums.CodeGenTypeEnum;
-import com.jiankun.aicode.service.ChatHistoryOriginalService;
 import com.jiankun.aicode.service.ChatHistoryService;
 import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
@@ -44,9 +43,6 @@ public class AiCodeGeneratorServiceFactory {
 
     @Resource
     private StreamingChatModel reasoningStreamingChatModel;
-
-    @Resource
-    private ChatHistoryOriginalService chatHistoryOriginalService;
 
     /**
      * 默认提供一个 Bean
@@ -101,10 +97,10 @@ public class AiCodeGeneratorServiceFactory {
                 .builder()
                 .id(appId)
                 .chatMemoryStore(redisChatMemoryStore)
-                .maxMessages(60)
+                .maxMessages(50)
                 .build();
         // 从数据库加载历史对话到记忆中
-        chatHistoryOriginalService.loadOriginalChatHistoryToMemory(appId, chatMemory, 50);
+        chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 20);
         // 根据代码生成类型选择不同的模型配置
         return switch (codeGenType) {
             // Vue 项目生成使用推理模型
