@@ -27,11 +27,20 @@
           </template>
           下载代码
         </a-button>
-        <a-button type="primary" @click="deployApp" :loading="deploying">
+        <a-button v-if="isOwner" type="primary" @click="deployApp" :loading="deploying">
           <template #icon>
             <CloudUploadOutlined />
           </template>
           一键部署
+        </a-button>
+        <a-button
+          v-if="appInfo?.deployKey"
+          type="default"
+          @click="handleViewWork"
+        >
+          <template #icon>
+            <EyeOutlined /> </template>
+          查看部署
         </a-button>
       </div>
     </div>
@@ -176,7 +185,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import AppDetailModal from '@/components/AppDetailModal.vue'
 import DeploySuccessModal from '@/components/DeploySuccessModal.vue'
 import aiAvatar from '@/assets/aiAvatar.png'
-import { API_BASE_URL, getStaticPreviewUrl } from '@/config/env'
+import { API_BASE_URL, getDeployUrl, getStaticPreviewUrl } from '@/config/env'
 
 import {
   CloudUploadOutlined,
@@ -528,6 +537,17 @@ const deployApp = async () => {
     deploying.value = false
   }
 }
+
+// 查看部署作品
+const handleViewWork = () => {
+  if (appInfo.value?.deployKey) {
+    const url = getDeployUrl(appInfo.value.deployKey);
+    window.open(url, '_blank');
+  } else {
+    // 理论上按钮会隐藏，但加个防御性编程更稳妥
+    message.warning('该应用尚未部署');
+  }
+};
 
 // 在新窗口打开预览
 const openInNewTab = () => {
