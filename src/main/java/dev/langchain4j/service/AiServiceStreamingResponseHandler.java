@@ -1,5 +1,7 @@
 package dev.langchain4j.service;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.jiankun.aicode.utils.JsonRepairUtil;
 import dev.langchain4j.Internal;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -120,7 +122,9 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 String toolName = toolExecutionRequest.name();
                 ToolExecutor toolExecutor = toolExecutors.get(toolName);
-                String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
+
+                String toolExecutionResult = executeToolWithJsonRepair(toolExecutor, toolExecutionRequest);
+
                 ToolExecutionResultMessage toolExecutionResultMessage =
                         ToolExecutionResultMessage.from(toolExecutionRequest, toolExecutionResult);
                 addToMemory(toolExecutionResultMessage);
@@ -193,7 +197,6 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
                     responseBuffer.clear();
                 }
 
-                // TODO should completeResponseHandler accept all ChatResponses that happened?
                 completeResponseHandler.accept(finalChatResponse);
             }
         }
@@ -227,5 +230,52 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
         } else {
             LOG.warn("Ignored error", error);
         }
+    }
+
+    private String executeToolWithJsonRepair(ToolExecutor toolExecutor, ToolExecutionRequest toolExecutionRequest) {
+        try {
+            return toolExecutor.execute(toolExecutionRequest, memoryId);
+        } catch (RuntimeException e) {
+            if (!isJsonParseException(e)) {
+                throw e;
+            }
+
+            String toolName = toolExecutionRequest.name();
+            String originalArguments = toolExecutionRequest.arguments();
+            LOG.warn("Malformed JSON in tool '{}' arguments, attempting repair. Original arguments: {}",
+                    toolName, originalArguments);
+
+            String repairedArguments = JsonRepairUtil.repairJson(originalArguments);
+            if (repairedArguments != null) {
+                try {
+                    ToolExecutionRequest repairedRequest = ToolExecutionRequest.builder()
+                            .id(toolExecutionRequest.id())
+                            .name(toolExecutionRequest.name())
+                            .arguments(repairedArguments)
+                            .build();
+                    String result = toolExecutor.execute(repairedRequest, memoryId);
+                    LOG.info("Successfully executed tool '{}' after JSON repair", toolName);
+                    return result;
+                } catch (Exception repairException) {
+                    LOG.error("Failed to execute tool '{}' even after JSON repair", toolName, repairException);
+                }
+            }
+
+            LOG.error("JSON repair failed for tool '{}', returning error to model", toolName);
+            return "Error: Failed to parse tool arguments as valid JSON. "
+                    + "Please ensure all arguments are properly formatted JSON with correct commas and escaping. "
+                    + "Original arguments: " + originalArguments;
+        }
+    }
+
+    private boolean isJsonParseException(Throwable e) {
+        Throwable cause = e.getCause();
+        while (cause != null) {
+            if (cause instanceof JsonParseException) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 }
