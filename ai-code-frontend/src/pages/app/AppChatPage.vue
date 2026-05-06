@@ -61,7 +61,7 @@
             <div v-if="message.type === 'user'" class="user-message">
               <div class="message-content">{{ message.content }}</div>
               <div class="message-avatar">
-                <a-avatar :src="loginUserStore.loginUser.userAvatar" />
+                <a-avatar :src="appInfo?.user.userAvatar" />
               </div>
             </div>
             <div v-else class="ai-message">
