@@ -6,6 +6,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -33,6 +34,7 @@ public class AiServiceTokenStream implements TokenStream {
     private final List<Content> retrievedContents;
     private final AiServiceContext context;
     private final Object memoryId;
+    private final InvocationContext invocationContext;
     private final GuardrailRequestParams commonGuardrailParams;
     private final Object methodKey;
 
@@ -61,10 +63,11 @@ public class AiServiceTokenStream implements TokenStream {
         this.messages = copy(ensureNotEmpty(parameters.messages(), "messages"));
         this.toolSpecifications = copy(parameters.toolSpecifications());
         this.toolExecutors = copy(parameters.toolExecutors());
-        this.retrievedContents = copy(parameters.gretrievedContents());
+        this.retrievedContents = copy(parameters.retrievedContents());
         this.context = ensureNotNull(parameters.context(), "context");
         ensureNotNull(this.context.streamingChatModel, "streamingChatModel");
-        this.memoryId = ensureNotNull(parameters.memoryId(), "memoryId");
+        this.invocationContext = ensureNotNull(parameters.invocationContext(), "invocationContext");
+        this.memoryId = ensureNotNull(this.invocationContext.chatMemoryId(), "memoryId");
         this.commonGuardrailParams = parameters.commonGuardrailParams();
         this.methodKey = parameters.methodKey();
     }
@@ -135,11 +138,13 @@ public class AiServiceTokenStream implements TokenStream {
         ChatExecutor chatExecutor = ChatExecutor.builder(context.streamingChatModel)
                 .errorHandler(errorHandler)
                 .chatRequest(chatRequest)
+                .invocationContext(invocationContext)
                 .build();
 
         var handler = new AiServiceStreamingResponseHandler(
                 chatExecutor,
                 context,
+                invocationContext,
                 memoryId,
                 partialResponseHandler,
                 partialToolExecutionRequestHandler,

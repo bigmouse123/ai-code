@@ -530,8 +530,8 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
       }
     }
 
-    // 处理done事件
-    eventSource.addEventListener('done', function () {
+    // stream end handler
+    const handleStreamEnd = function () {
       if (streamCompleted) return
 
       streamCompleted = true
@@ -543,7 +543,9 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
         await fetchAppInfo()
         updatePreview()
       }, 1000)
-    })
+    }
+    eventSource.addEventListener('end', handleStreamEnd)
+    eventSource.addEventListener('done', handleStreamEnd)
 
     // 处理错误
     eventSource.onerror = function () {

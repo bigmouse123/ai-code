@@ -11,9 +11,12 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.guardrail.OutputGuardrailRequest;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.CompleteToolCall;
+import dev.langchain4j.model.chat.response.PartialToolCall;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.tool.ToolExecution;
@@ -40,6 +43,7 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
 
     private final ChatExecutor chatExecutor;
     private final AiServiceContext context;
+    private final InvocationContext invocationContext;
     private final Object memoryId;
     private final GuardrailRequestParams commonGuardrailParams;
     private final Object methodKey;
@@ -63,6 +67,7 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
     AiServiceStreamingResponseHandler(
             ChatExecutor chatExecutor,
             AiServiceContext context,
+            InvocationContext invocationContext,
             Object memoryId,
             Consumer<String> partialResponseHandler,
             BiConsumer<Integer, ToolExecutionRequest> partialToolExecutionRequestHandler,
@@ -78,6 +83,7 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
             Object methodKey) {
         this.chatExecutor = ensureNotNull(chatExecutor, "chatExecutor");
         this.context = ensureNotNull(context, "context");
+        this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
         this.methodKey = methodKey;
 
@@ -108,9 +114,27 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
     }
 
     @Override
-    public void onPartialToolExecutionRequest(int index, ToolExecutionRequest partialToolExecutionRequest) {
-        // If we're using output guardrails, then buffer the partial response until the guardrails have completed
-        partialToolExecutionRequestHandler.accept(index, partialToolExecutionRequest);
+    public void onPartialToolCall(PartialToolCall partialToolCall) {
+        if (partialToolExecutionRequestHandler == null || partialToolCall == null) {
+            return;
+        }
+        ToolExecutionRequest partialToolExecutionRequest = ToolExecutionRequest.builder()
+                .id(partialToolCall.id())
+                .name(partialToolCall.name())
+                .arguments(partialToolCall.partialArguments())
+                .build();
+        partialToolExecutionRequestHandler.accept(partialToolCall.index(), partialToolExecutionRequest);
+    }
+
+    @Override
+    public void onCompleteToolCall(CompleteToolCall completeToolCall) {
+        if (completeToolExecutionRequestHandler == null || completeToolCall == null) {
+            return;
+        }
+        completeToolExecutionRequestHandler.accept(
+                completeToolCall.index(),
+                completeToolCall.toolExecutionRequest()
+        );
     }
 
     @Override
@@ -133,6 +157,7 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
                     ToolExecution toolExecution = ToolExecution.builder()
                             .request(toolExecutionRequest)
                             .result(toolExecutionResult)
+                            .invocationContext(invocationContext)
                             .build();
                     toolExecutionHandler.accept(toolExecution);
                 }
@@ -146,6 +171,7 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
             var handler = new AiServiceStreamingResponseHandler(
                     chatExecutor,
                     context,
+                    invocationContext,
                     memoryId,
                     partialResponseHandler,
                     partialToolExecutionRequestHandler,

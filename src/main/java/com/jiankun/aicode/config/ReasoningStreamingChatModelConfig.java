@@ -25,8 +25,6 @@ import java.util.Map;
 public class ReasoningStreamingChatModelConfig {
 
     private static final String DEEPSEEK_V4_FLASH_MODEL = "deepseek-v4-flash";
-    private static final String DEEPSEEK_CHAT_COMPAT_MODEL = "deepseek-chat";
-    private static final String DEEPSEEK_REASONER_COMPAT_MODEL = "deepseek-reasoner";
 
     private String baseUrl;
     private String apiKey;
@@ -43,6 +41,8 @@ public class ReasoningStreamingChatModelConfig {
 
     @Bean
     public StreamingChatModel reasoningStreamingChatModel() {
+        boolean enableThinking = Boolean.TRUE.equals(thinkingEnabled);
+
         OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
                 .apiKey(apiKey)
                 .baseUrl(baseUrl)
@@ -51,22 +51,16 @@ public class ReasoningStreamingChatModelConfig {
                 .logRequests(logRequests)
                 .logResponses(logResponses);
 
-        // DeepSeek V4 switches thinking mode via extra_body.thinking.type.
-        // If current LangChain4j cannot pass custom parameters, fallback to compat model names.
-        boolean thinkingConfigured = tryApplyThinkingMode(builder, Boolean.TRUE.equals(thinkingEnabled));
+        applyThinkingTransport(builder, enableThinking);
+
+        boolean thinkingConfigured = tryApplyThinkingMode(builder, enableThinking);
         if (!thinkingConfigured) {
-            String compatibilityModel = Boolean.TRUE.equals(thinkingEnabled)
-                    ? DEEPSEEK_REASONER_COMPAT_MODEL
-                    : DEEPSEEK_CHAT_COMPAT_MODEL;
-            builder.modelName(compatibilityModel);
-            log.warn("Current LangChain4j version does not support customParameters; fallback to compatibility model [{}].",
-                    compatibilityModel);
+            throw new IllegalStateException("Current langchain4j/open-ai builder does not support thinking mode config. "
+                    + "Please upgrade dependencies that support sendThinking(...) or customParameters(...).");
         }
 
-        if (Boolean.TRUE.equals(thinkingEnabled) && reasoningEffort != null && !reasoningEffort.isBlank()) {
-            builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
-                    .reasoningEffort(reasoningEffort)
-                    .build());
+        if (enableThinking && reasoningEffort != null && !reasoningEffort.isBlank()) {
+            applyReasoningEffort(builder, reasoningEffort);
         }
 
         return builder.build();
@@ -74,12 +68,43 @@ public class ReasoningStreamingChatModelConfig {
 
     private boolean tryApplyThinkingMode(OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder,
                                          boolean enableThinking) {
+        // DeepSeek thinking mode switch: customParameters({thinking:{type:enabled|disabled}})
+        Map<String, Object> thinkingConfig = Map.of(
+                "thinking", Map.of("type", enableThinking ? "enabled" : "disabled")
+        );
+        return invokeMethod(builder, "customParameters", new Class[]{Map.class}, new Object[]{thinkingConfig});
+    }
+
+    private void applyThinkingTransport(OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder,
+                                        boolean enableThinking) {
+        // Parse reasoning_content from response into AiMessage.thinking()
+        invokeMethod(builder, "returnThinking", new Class[]{Boolean.class}, new Object[]{enableThinking});
+
+        // Send AiMessage.thinking() back as reasoning_content in follow-up tool-call turns.
+        boolean applied = invokeMethod(builder, "sendThinking",
+                new Class[]{Boolean.class, String.class}, new Object[]{enableThinking, "reasoning_content"});
+        if (!applied) {
+            invokeMethod(builder, "sendThinking", new Class[]{Boolean.class}, new Object[]{enableThinking});
+        }
+    }
+
+    private void applyReasoningEffort(OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder,
+                                      String effort) {
+        // Preferred path on newer versions: reasoningEffort(String)
+        if (invokeMethod(builder, "reasoningEffort", new Class[]{String.class}, new Object[]{effort})) {
+            return;
+        }
+
+        // Fallback path for older versions
+        builder.defaultRequestParameters(OpenAiChatRequestParameters.builder()
+                .reasoningEffort(effort)
+                .build());
+    }
+
+    private boolean invokeMethod(Object target, String methodName, Class<?>[] paramTypes, Object[] args) {
         try {
-            Method customParametersMethod = builder.getClass().getMethod("customParameters", Map.class);
-            Map<String, Object> thinkingConfig = Map.of(
-                    "thinking", Map.of("type", enableThinking ? "enabled" : "disabled")
-            );
-            customParametersMethod.invoke(builder, thinkingConfig);
+            Method method = target.getClass().getMethod(methodName, paramTypes);
+            method.invoke(target, args);
             return true;
         } catch (ReflectiveOperationException ignored) {
             return false;

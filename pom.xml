@@ -28,6 +28,8 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <langchain4j.version>1.14.0</langchain4j.version>
+        <langchain4j.spring.version>1.14.0-beta24</langchain4j.spring.version>
     </properties>
     <dependencies>
 
@@ -86,24 +88,24 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>
-            <version>1.1.0</version>
+            <version>${langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
-            <version>1.1.0-beta7</version>
+            <version>${langchain4j.spring.version}</version>
         </dependency>
         <!-- LangChain4j Reactor(实现SSE流式输出) -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-reactor</artifactId>
-            <version>1.1.0-beta7</version>
+            <version>${langchain4j.spring.version}</version>
         </dependency>
         <!-- LangChain4j Redis -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-community-redis-spring-boot-starter</artifactId>
-            <version>1.1.0-beta7</version>
+            <version>${langchain4j.spring.version}</version>
         </dependency>
         <!-- 本地缓存 -->
         <dependency>
